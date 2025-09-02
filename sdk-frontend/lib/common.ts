@@ -1,15 +1,4 @@
-import sarosSdk, {
-  getSwapAmountSaros,
-  swapSaros,
-  createPool,
-  getPoolInfo,
-  depositAllTokenTypes,
-  withdrawAllTokenTypes,
-  convertBalanceToWei,
-  getTokenMintInfo,
-  getTokenAccountInfo,
-  getInfoTokenByMint,
-} from '@saros-finance/sdk';
+import sarosSdk from '@saros-finance/sdk';
 import BN from 'bn.js';
 import { PublicKey, Connection, clusterApiUrl } from '@solana/web3.js';
 
@@ -29,8 +18,18 @@ export const FEE_OWNER = 'FDbLZ5DRo61queVRH9LL1mQnsiAoubQEnoCRuPEmH9M8';
 
 export const SLIPPAGE = 0.5;
 
+// Use environment variable or fallback to public RPC
+// Temporarily hardcode the Helius RPC URL to test
+const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || process.env.SOLANA_RPC_URL || "https://mainnet.helius-rpc.com/?api-key=756d5fd7-b998-4849-a23b-ffef008f72f3" || clusterApiUrl('mainnet-beta');
+
+// Debug logging to see which RPC URL is being used
+console.log('Environment variables:');
+console.log('NEXT_PUBLIC_SOLANA_RPC_URL:', process.env.NEXT_PUBLIC_SOLANA_RPC_URL);
+console.log('SOLANA_RPC_URL:', process.env.SOLANA_RPC_URL);
+console.log('Using RPC URL:', rpcUrl);
+
 export const connection = new Connection(
-  process.env.SOLANA_RPC_URL || clusterApiUrl('mainnet-beta'),
+  rpcUrl,
   'confirmed'
 );
 
@@ -97,6 +96,12 @@ export const farmList = {
 export {
   BN,
   PublicKey,
+  SarosFarmService,
+  SarosStakeServices,
+};
+
+// Export functions from the SDK
+export const {
   getSwapAmountSaros,
   swapSaros,
   createPool,
@@ -107,8 +112,6 @@ export {
   getTokenMintInfo,
   getTokenAccountInfo,
   getInfoTokenByMint,
-  SarosFarmService,
-  SarosStakeServices,
-};
+} = sarosSdk;
 
 

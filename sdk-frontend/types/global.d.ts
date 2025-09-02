@@ -2,18 +2,17 @@ declare module '@saros-finance/sdk' {
   export interface SarosSDK {
     SarosFarmService: any;
     SarosStakeServices: any;
+    getSwapAmountSaros: (...args: any[]) => any;
+    swapSaros: (...args: any[]) => any;
+    createPool: (...args: any[]) => any;
+    getPoolInfo: (...args: any[]) => any;
+    depositAllTokenTypes: (...args: any[]) => any;
+    withdrawAllTokenTypes: (...args: any[]) => any;
+    convertBalanceToWei: (...args: any[]) => any;
+    getTokenMintInfo: (...args: any[]) => any;
+    getTokenAccountInfo: (...args: any[]) => any;
+    getInfoTokenByMint: (...args: any[]) => any;
   }
-  
-  export function getSwapAmountSaros(...args: any[]): any;
-  export function swapSaros(...args: any[]): any;
-  export function createPool(...args: any[]): any;
-  export function getPoolInfo(...args: any[]): any;
-  export function depositAllTokenTypes(...args: any[]): any;
-  export function withdrawAllTokenTypes(...args: any[]): any;
-  export function convertBalanceToWei(...args: any[]): any;
-  export function getTokenMintInfo(...args: any[]): any;
-  export function getTokenAccountInfo(...args: any[]): any;
-  export function getInfoTokenByMint(...args: any[]): any;
   
   const sarosSdk: SarosSDK;
   export default sarosSdk;
