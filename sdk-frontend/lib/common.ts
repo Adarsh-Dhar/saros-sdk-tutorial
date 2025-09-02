@@ -9,10 +9,9 @@ import sarosSdk, {
   getTokenMintInfo,
   getTokenAccountInfo,
   getInfoTokenByMint,
-  genConnectionSolana,
 } from '@saros-finance/sdk';
 import BN from 'bn.js';
-import { PublicKey } from '@solana/web3.js';
+import { PublicKey, Connection, clusterApiUrl } from '@solana/web3.js';
 
 const { SarosFarmService, SarosStakeServices } = sarosSdk;
 
@@ -30,7 +29,10 @@ export const FEE_OWNER = 'FDbLZ5DRo61queVRH9LL1mQnsiAoubQEnoCRuPEmH9M8';
 
 export const SLIPPAGE = 0.5;
 
-export const connection = genConnectionSolana();
+export const connection = new Connection(
+  process.env.SOLANA_RPC_URL || clusterApiUrl('mainnet-beta'),
+  'confirmed'
+);
 
 // Example owner address (replace with connected wallet in app usage)
 export const accountSol = '5UrM9csUEDBeBqMZTuuZyHRNhbRW4vQ1MgKJDrKU1U2v';

@@ -1,4 +1,4 @@
-export { onSwap } from './swap';
+export { onSwap as onSwapFrontend } from './swap';
 export { onCreatePool } from './createPool';
 export { onAddLiqPool } from './addLiquidity';
 export { onRemoveLiqPool } from './removeLiquidity';

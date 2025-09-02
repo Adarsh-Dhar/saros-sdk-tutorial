@@ -12,7 +12,12 @@ import {
   swapSaros,
 } from './common';
 
-export const onSwap = async () => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const onSwap = async (_params?: {
+  publicKey: PublicKey | null;
+  sendTransaction?: any;
+  signTransaction?: (tx: any) => Promise<any>;
+}) => {
   const fromTokenAccount = C98_TOKEN.addressSPL;
   const toTokenAccount = USDC_TOKEN.addressSPL;
   const fromMint = C98_TOKEN.mintAddress;
