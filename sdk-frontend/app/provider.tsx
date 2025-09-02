@@ -15,6 +15,7 @@ import {
   LedgerWalletAdapter,
   CoinbaseWalletAdapter,
   TrustWalletAdapter,
+  Coin98WalletAdapter
 } from "@solana/wallet-adapter-wallets";
 
 // Import the wallet adapter styles
@@ -45,6 +46,7 @@ export const SolanaProvider: FC<SolanaProviderProps> = ({ children }) => {
       new LedgerWalletAdapter(),
       new CoinbaseWalletAdapter(),
       new TrustWalletAdapter(),
+      new Coin98WalletAdapter(),
     ],
     []
   );
