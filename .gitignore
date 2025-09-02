@@ -1,0 +1,13 @@
+/node_modules
+/sdk/node_modules
+/sdk-frontend/node_modules
+/sdk/dist
+/sdk-frontend/dist
+/sdk/build
+/sdk-frontend/build
+/sdk/coverage
+/sdk-frontend/coverage
+/sdk/logs
+/sdk-frontend/logs
+/sdk/logs/saros-sdk-tutorial.log
+/sdk-frontend/logs/sdk-frontend.log
