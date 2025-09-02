@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PublicKey } from '@solana/web3.js';
 import {
   connection,
