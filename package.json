@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@saros-finance/sdk": "^2.4.0",
-    "bn.js": "^5.2.2"
-  }
-}
