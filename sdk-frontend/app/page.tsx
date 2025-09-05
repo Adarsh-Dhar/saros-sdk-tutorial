@@ -48,6 +48,7 @@ export default function Home() {
           publicKey: publicKey ?? null,
           sendTransaction,
           signTransaction: (adapter as { signTransaction?: (tx: Transaction) => Promise<Transaction> }).signTransaction,
+          wallet,
         });
       },
       createPool: async () => await onCreatePool(),

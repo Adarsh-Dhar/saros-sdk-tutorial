@@ -26,6 +26,7 @@ export const onSwap = async (params?: {
   publicKey: PublicKey | null;
   sendTransaction?: any;
   signTransaction?: (tx: any) => Promise<any>;
+  wallet?: any;
 }) => {
   if (!params?.publicKey) {
     throw new Error('Wallet not connected');
@@ -195,7 +196,7 @@ export const onSwap = async (params?: {
       const base64Transaction = Buffer.from(serializedTransaction).toString('base64');
 
       // Sign with Coin98
-      const result = await window.coin98.sol.request({
+      const result = await window.coin98?.sol?.request({
         method: 'sol_sign',
         params: [base64Transaction]
       });
@@ -213,15 +214,21 @@ export const onSwap = async (params?: {
     }
   };
 
-  // Create a custom signTransaction function for Coin98
+  // Create a custom signTransaction function that respects the selected wallet
   const customSignTransaction = async (transaction: Transaction) => {
-    if (typeof window !== 'undefined' && window.coin98?.sol) {
-      return await signTransactionWithCoin98(transaction);
+    // First, try to use the wallet adapter's signTransaction method directly
+    if (params.wallet?.adapter?.signTransaction) {
+      try {
+        return await params.wallet.adapter.signTransaction(transaction);
+      } catch (error) {
+        console.error('Error with wallet adapter signTransaction:', error);
+        // Fallback to Coin98 if the wallet adapter fails
+      }
     }
     
-    // Fallback to the provided signTransaction function
-    if (params.signTransaction) {
-      return await params.signTransaction(transaction);
+    // Fallback to Coin98 only if no other wallet is available
+    if (typeof window !== 'undefined' && window.coin98?.sol) {
+      return await signTransactionWithCoin98(transaction);
     }
     
     throw new Error('No signing method available');
@@ -231,7 +238,29 @@ export const onSwap = async (params?: {
   const toTokenAccount = USDC_TOKEN.addressSPL;
   const fromMint = C98_TOKEN.mintAddress;
   const toMint = USDC_TOKEN.mintAddress;
-  const fromAmount = 1;
+  const fromAmount = 0.001; // Reduced amount to avoid insufficient balance issues
+
+  // Debug: Check wallet balance and token accounts
+  try {
+    const walletBalance = await connection.getBalance(params.publicKey);
+    console.log('Wallet SOL balance:', walletBalance / 1e9, 'SOL');
+    
+    // Check if token accounts exist
+    const fromTokenAccountInfo = await connection.getAccountInfo(new PublicKey(fromTokenAccount));
+    const toTokenAccountInfo = await connection.getAccountInfo(new PublicKey(toTokenAccount));
+    
+    console.log('From token account exists:', !!fromTokenAccountInfo);
+    console.log('To token account exists:', !!toTokenAccountInfo);
+    
+    if (fromTokenAccountInfo) {
+      console.log('From token account owner:', fromTokenAccountInfo.owner.toString());
+    }
+    if (toTokenAccountInfo) {
+      console.log('To token account owner:', toTokenAccountInfo.owner.toString());
+    }
+  } catch (error) {
+    console.log('Error checking balances:', error);
+  }
 
   // Solution 1: Match the exact SDK example format
   const estSwap = await getSwapAmountSaros(
@@ -244,6 +273,86 @@ export const onSwap = async (params?: {
   );
 
   const { amountOutWithSlippage } = estSwap;
+  
+  console.log('Estimated swap output:', amountOutWithSlippage);
+  
+  // Check if we need to create associated token accounts
+  const { 
+    getAssociatedTokenAddress, 
+    createAssociatedTokenAccountInstruction
+  } = await import('@solana/spl-token');
+  
+  try {
+    const fromATA = await getAssociatedTokenAddress(
+      new PublicKey(fromMint),
+      params.publicKey
+    );
+    const toATA = await getAssociatedTokenAddress(
+      new PublicKey(toMint),
+      params.publicKey
+    );
+    
+    console.log('From ATA:', fromATA.toString());
+    console.log('To ATA:', toATA.toString());
+    
+    // Check if ATAs exist
+    const fromATAInfo = await connection.getAccountInfo(fromATA);
+    const toATAInfo = await connection.getAccountInfo(toATA);
+    
+    console.log('From ATA exists:', !!fromATAInfo);
+    console.log('To ATA exists:', !!toATAInfo);
+    
+    // Create missing ATAs
+    const createATATransaction = new Transaction();
+    let needsATACreation = false;
+    
+    if (!fromATAInfo) {
+      console.log('Creating From ATA for C98...');
+      const createFromATAInstruction = createAssociatedTokenAccountInstruction(
+        params.publicKey, // payer
+        fromATA, // associatedToken
+        params.publicKey, // owner
+        new PublicKey(fromMint) // mint
+      );
+      createATATransaction.add(createFromATAInstruction);
+      needsATACreation = true;
+    }
+    
+    if (!toATAInfo) {
+      console.log('Creating To ATA for USDC...');
+      const createToATAInstruction = createAssociatedTokenAccountInstruction(
+        params.publicKey, // payer
+        toATA, // associatedToken
+        params.publicKey, // owner
+        new PublicKey(toMint) // mint
+      );
+      createATATransaction.add(createToATAInstruction);
+      needsATACreation = true;
+    }
+    
+    // Execute ATA creation transaction if needed
+    if (needsATACreation) {
+      console.log('Creating missing token accounts...');
+      
+      // Set transaction properties
+      createATATransaction.feePayer = params.publicKey;
+      const { blockhash } = await connection.getLatestBlockhash('confirmed');
+      createATATransaction.recentBlockhash = blockhash;
+      
+      // Sign and send the ATA creation transaction
+      const signedATATransaction = await customSignTransaction(createATATransaction);
+      const ataTxHash = await connection.sendRawTransaction(signedATATransaction.serialize());
+      
+      console.log('ATA creation transaction sent:', ataTxHash);
+      
+      // Wait for confirmation
+      await connection.confirmTransaction(ataTxHash, 'confirmed');
+      console.log('ATA creation confirmed');
+    }
+  } catch (error) {
+    console.log('Error checking/creating ATAs:', error);
+    return `Error creating token accounts: ${error}`;
+  }
   
   // CORRECT APPROACH: Match SDK example exactly with proper parameter order
   // But we need to handle Coin98 signing by overriding the global signTransaction
