@@ -25,13 +25,24 @@ type ActionKey =
   | "listenNewPool";
 
 export default function Home() {
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected, signTransaction } = useWallet();
   const [activeAction, setActiveAction] = useState<ActionKey | null>(null);
   const [output, setOutput] = useState<string>("");
 
   const actions = useMemo(
     () => ({
-      swap: async () => await onSwap(publicKey),
+      swap: async () =>
+        await onSwap(
+          publicKey,
+          signTransaction
+            ? {
+                // Adapt wallet-adapter signature to the generic unknown signature expected by our lib
+                signTransaction: async (tx: unknown) =>
+                  // @ts-expect-error cross web3.js versions
+                  await signTransaction(tx),
+              }
+            : undefined
+        ),
       createPool: async () => await onCreatePool(publicKey),
       addLiquidity: async () => await onAddLiquidity(publicKey),
       removeLiquidity: async () => await onRemoveLiquidity(publicKey),
@@ -40,7 +51,7 @@ export default function Home() {
       getPools: async () => JSON.stringify(await getPoolAddresses(), null, 2),
       getPoolMetadata: async () => JSON.stringify(await fetchPoolMetadata(), null, 2),
       listenNewPool: async () => await onListenNewPoolAddress(),
-    }), [publicKey]);
+    }), [publicKey, signTransaction]);
 
   const run = useCallback(async (key: ActionKey) => {
     setActiveAction(key);

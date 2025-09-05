@@ -12,6 +12,13 @@ const compat = new FlatCompat({
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
+    languageOptions: {
+      parserOptions: {
+        // Restrict TypeScript project to this app only, avoiding node_modules tsconfigs
+        project: ["./tsconfig.json"],
+        tsconfigRootDir: __dirname,
+      },
+    },
     ignores: [
       "node_modules/**",
       ".next/**",

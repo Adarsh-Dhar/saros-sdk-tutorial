@@ -18,6 +18,11 @@
         "name": "next"
       }
     ],
+    "types": ["jsdom"],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./types"
+    ],
     "paths": {
       "@/*": ["./*"]
     }
